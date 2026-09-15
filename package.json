@@ -1,0 +1,24 @@
+{
+  "name": "kneo_panel_e2e",
+  "version": "1.0.0",
+  "description": "Read-only-first Playwright tests for the KneoPanel test environment",
+  "private": true,
+  "scripts": {
+    "test": "playwright test --project=public-read-only --project=read-only",
+    "test:auth": "playwright test --project=setup",
+    "test:headed": "playwright test --project=read-only --headed",
+    "test:ui": "playwright test --project=read-only --ui",
+    "test:mutating": "node scripts/run-mutating-tests.mjs",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.2",
+    "dotenv": "^17.4.2",
+    "typescript": "^7.0.2"
+  }
+}
