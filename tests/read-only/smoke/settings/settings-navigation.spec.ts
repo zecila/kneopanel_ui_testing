@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/read-only-test';
+import { test, expect } from '../../../fixtures/read-only-test';
 
 // open Settings sidebar
 test.describe('Settings', () => {
@@ -16,7 +16,9 @@ test.describe('Settings', () => {
 
     // Assert: verify both the destination and content unique to Panel settings.
     await expect(page).toHaveURL(/\/settings\/panel(?:[/?#]|$)/);
-    await expect(page.getByText('Panel user', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('textbox', { name: 'Panel user', exact: true }),
+    ).toBeVisible();
   });
 });
 
@@ -37,16 +39,21 @@ test.describe('Security', () => {
       exact: true,
     });
     await expect(securityRadioButton).toBeVisible();
-    await securityRadioButton.click();
+    await page.getByText('Security', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/settings\/safe(?:[/?#]|$)/);
-    await expect(page.getByText('Panel port', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Panel port', { exact: true }).first(),
+    ).toBeVisible();
   });
 });
 
 // open Settings -> Alert Notification
 test.describe('Alert Notification', () => {
   test('opens the Alert Notification settings from the Settings page', async ({ page }) => {
+    await page.route('**/api/v2/alert/search', (route) =>
+      route.abort('blockedbyclient'),
+    );
     await page.goto('/');
 
     const settingsMenuItem = page.getByRole('menuitem', {
@@ -61,7 +68,7 @@ test.describe('Alert Notification', () => {
       exact: true,
     });
     await expect(alertNotificationRadioButton).toBeVisible();
-    await alertNotificationRadioButton.click();
+    await page.getByText('Alert Notification', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/settings\/alert(?:[/?#]|$)/);
     await expect(page.getByText('Alert List', { exact: true })).toBeVisible();
@@ -71,6 +78,9 @@ test.describe('Alert Notification', () => {
 // open Settings -> Backup accounts
 test.describe('Backup accounts', () => {
   test('opens the Backup accounts settings from the Settings page', async ({ page }) => {
+    await page.route('**/api/v2/backups/search', (route) =>
+      route.abort('blockedbyclient'),
+    );
     await page.goto('/');
 
     const settingsMenuItem = page.getByRole('menuitem', {
@@ -85,7 +95,7 @@ test.describe('Backup accounts', () => {
       exact: true,
     });
     await expect(backupAccountsRadioButton).toBeVisible();
-    await backupAccountsRadioButton.click();
+    await page.getByText('Backup accounts', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/settings\/backupaccount(?:[/?#]|$)/);
     await expect(
@@ -97,6 +107,13 @@ test.describe('Backup accounts', () => {
 // open Settings -> Snapshots
 test.describe('Snapshots', () => {
   test('opens the Snapshots settings from the Settings page', async ({ page }) => {
+    test.info().annotations.push({
+      type: 'bug-report',
+      description: 'docs/bugs/verified-ui-bugs-9-14-2026.md#5',
+    });
+    await page.route('**/api/v2/settings/snapshot/search', (route) =>
+      route.abort('blockedbyclient'),
+    );
     await page.goto('/');
 
     const settingsMenuItem = page.getByRole('menuitem', {
@@ -111,7 +128,7 @@ test.describe('Snapshots', () => {
       exact: true,
     });
     await expect(snapshotsRadioButton).toBeVisible();
-    await snapshotsRadioButton.click();
+    await page.getByText('Snapshots', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/settings\/snapshot(?:[/?#]|$)/);
     await expect(page.getByText('Create', { exact: true })).toBeVisible();
@@ -135,7 +152,7 @@ test.describe('About', () => {
       exact: true,
     });
     await expect(aboutRadioButton).toBeVisible();
-    await aboutRadioButton.click();
+    await page.getByText('About', { exact: true }).click();
 
     await expect(page).toHaveURL(/\/settings\/about(?:[/?#]|$)/);
     await expect(page.getByText('Linux Server Panel', { exact: true })).toBeVisible();

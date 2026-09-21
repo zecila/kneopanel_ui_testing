@@ -11,6 +11,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
@@ -47,6 +48,24 @@ export default defineConfig({
         storageState: AUTH_STATE_PATH,
       },
     },
+    {
+      name: 'read-only-firefox',
+      testMatch: 'read-only/**/*.spec.ts',
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: AUTH_STATE_PATH,
+      },
+    },
+    {
+      name: 'read-only-webkit',
+      testMatch: 'read-only/**/*.spec.ts',
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: AUTH_STATE_PATH,
+      },
+    },
     ...(mutationTestsEnabled
       ? [
           {
@@ -54,6 +73,7 @@ export default defineConfig({
             testMatch: 'mutating/**/*.spec.ts',
             dependencies: ['setup'],
             fullyParallel: false,
+            retries: 0,
             use: {
               ...devices['Desktop Chrome'],
               storageState: AUTH_STATE_PATH,

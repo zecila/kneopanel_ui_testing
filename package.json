@@ -8,6 +8,8 @@
     "test:auth": "playwright test --project=setup",
     "test:headed": "playwright test --project=read-only --headed",
     "test:ui": "playwright test --project=read-only --ui",
+    "test:firefox": "playwright test --project=read-only-firefox --workers=1",
+    "test:webkit": "playwright test --project=read-only-webkit --workers=1",
     "test:mutating": "node scripts/run-mutating-tests.mjs",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"

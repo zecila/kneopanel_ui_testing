@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/read-only-test';
+import { test, expect } from '../../fixtures/read-only-test';
 
 test.describe('Overview', () => {
   test.beforeEach(async ({ page }) => {
@@ -6,18 +6,27 @@ test.describe('Overview', () => {
   });
 
   test('displays the main dashboard sections', async ({ page }) => {
+    const dashboard = page.locator('#dashboard');
+
     await expect(page).toHaveTitle('KneoPanel');
-    await expect(page.getByText('Status', { exact: true })).toBeVisible();
-    await expect(page.getByText('Monitoring', { exact: true })).toBeVisible();
+    await expect(dashboard.getByText('Status', { exact: true })).toBeVisible();
     await expect(
-      page.getByText('System information', { exact: true }),
+      dashboard.getByText('Monitoring', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dashboard.getByText('System information', { exact: true }).first(),
     ).toBeVisible();
   });
 
-  test('displays the main system status categories', async ({ page }) => {
-    await expect(page.getByText('Load', { exact: true })).toBeVisible();
-    await expect(page.getByText('CPU', { exact: true })).toBeVisible();
-    await expect(page.getByText('Memory', { exact: true })).toBeVisible();
+  test('displays the main system load status', async ({ page }) => {
+    const dashboard = page.locator('#dashboard');
+
+    await expect(
+      dashboard.getByText(/^(Low|Normal|High) load/).first(),
+    ).toBeVisible();
+    await expect(
+      dashboard.getByRole('button', { name: 'More', exact: true }),
+    ).toBeVisible();
   });
 
   test('displays the KIS summary categories', async ({ page }) => {
@@ -37,7 +46,7 @@ test.describe('Overview', () => {
       'Uptime',
       'Up since',
     ]) {
-      await expect(page.getByText(label, { exact: true })).toBeVisible();
+      await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
     }
   });
 
@@ -64,14 +73,14 @@ test.describe('Overview', () => {
       exact: true,
     });
 
-    await diskIORadioButton.click();
+    await page.getByText('Disk I/O', { exact: true }).click();
     await expect(diskIORadioButton).toBeChecked();
     await expect(page.getByText(/^Read:/)).toBeVisible();
     await expect(page.getByText(/^Write:/)).toBeVisible();
     await expect(page.getByText(/^I\/O operations:/)).toBeVisible();
     await expect(page.getByText(/^I\/O latency:/)).toBeVisible();
 
-    await networkRadioButton.click();
+    await page.getByText('Network', { exact: true }).click();
     await expect(networkRadioButton).toBeChecked();
     await expect(page.getByText(/^Up:/)).toBeVisible();
   });
