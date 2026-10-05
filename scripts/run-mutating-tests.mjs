@@ -40,12 +40,31 @@ const playwrightCli = path.join(
   'test',
   'cli.js',
 );
+
+const forwardedArguments = process.argv.slice(2);
+const uiMode = forwardedArguments.includes('--ui');
+
+if (uiMode && !forwardedArguments.includes('--no-deps')) {
+  const authentication = spawnSync(
+    process.execPath,
+    [playwrightCli, 'test', '--project=setup', '--workers=1'],
+    { env: process.env, stdio: 'inherit' },
+  );
+
+  if (authentication.status !== 0) {
+    process.exit(authentication.status ?? 1);
+  }
+
+  // Authentication has been refreshed; keep setup out of the mutation UI tree.
+  forwardedArguments.push('--no-deps');
+}
+
 const result = spawnSync(
   process.execPath,
   [
     playwrightCli,
     'test',
-    ...process.argv.slice(2),
+    ...forwardedArguments,
     '--project=mutating',
     '--workers=1',
   ],

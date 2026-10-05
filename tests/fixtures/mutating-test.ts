@@ -43,6 +43,11 @@ interface PendingCapture {
   name: string;
 }
 
+interface SettingRestoration {
+  key: string;
+  value: unknown;
+}
+
 const API_ROOT = '/api/v2';
 
 async function readEnvelope<T>(response: APIResponse): Promise<ApiEnvelope<T>> {
@@ -159,6 +164,7 @@ async function deleteResource(
 export class MutationRegistry {
   private readonly pendingCaptures: PendingCapture[] = [];
   private readonly resources: MutationResource[] = [];
+  private readonly settingRestorations = new Map<string, SettingRestoration>();
 
   constructor(
     private readonly request: APIRequestContext,
@@ -227,6 +233,16 @@ export class MutationRegistry {
     resource.name = name;
   }
 
+  trackSettingRestoration(key: string, value: unknown): void {
+    if (!this.settingRestorations.has(key)) {
+      this.settingRestorations.set(key, { key, value });
+    }
+  }
+
+  confirmSettingRestored(key: string): void {
+    this.settingRestorations.delete(key);
+  }
+
   async confirmDeleted(resource: MutationResource): Promise<void> {
     const stillExists = (
       await listResources(
@@ -248,6 +264,25 @@ export class MutationRegistry {
 
   async cleanup(): Promise<void> {
     const failures: string[] = [];
+
+    for (const restoration of this.settingRestorations.values()) {
+      try {
+        const envelope = await readEnvelope<unknown>(
+          await this.request.post(`${API_ROOT}/core/settings/update`, {
+            data: restoration,
+            headers: this.headers,
+          }),
+        );
+        if (envelope.code !== 200) {
+          throw new Error(
+            `KneoPanel returned code ${envelope.code}: ${envelope.message}`,
+          );
+        }
+        this.settingRestorations.delete(restoration.key);
+      } catch (error) {
+        failures.push(`setting ${restoration.key}: ${String(error)}`);
+      }
+    }
 
     for (const pending of [...this.pendingCaptures]) {
       try {
@@ -330,7 +365,7 @@ interface MutatingFixtures {
 }
 
 export const test = base.extend<MutatingFixtures>({
-  mutationRegistry: async ({ context, page }, use) => {
+  mutationRegistry: async ({ context, page }, use, testInfo) => {
     const authenticatedRequest = page.waitForRequest(
       (request) =>
         request.method() === 'POST' &&
@@ -353,7 +388,13 @@ export const test = base.extend<MutatingFixtures>({
       'x-csrf-token': csrfToken,
     });
     await use(registry);
-    await registry.cleanup();
+    try {
+      await registry.cleanup();
+    } catch (error) {
+      // Cleanup failures must fail even when the test observed a known defect.
+      testInfo.expectedStatus = 'passed';
+      throw error;
+    }
   },
 });
 

@@ -9,10 +9,19 @@ const APP_ORIGIN = new URL(BASE_URL).origin;
 const REVIEWED_READ_ONLY_POST_PATHS: readonly RegExp[] = [
   /^\/api\/v2\/ai\/mcp\/search$/,
   /^\/api\/v2\/containers\/item\/stats$/,
+  /^\/api\/v2\/core\/commands\/search$/,
   /^\/api\/v2\/core\/commands\/tree$/,
   /^\/api\/v2\/core\/nodes\/list$/,
   /^\/api\/v2\/core\/groups\/search$/,
   /^\/api\/v2\/core\/script\/search$/,
+  // KIS Models uses POST for status and list lookups that do not change state.
+  /^\/api\/v2\/core\/settings\/kis\/instances$/,
+  /^\/api\/v2\/core\/settings\/kis\/model\/background\/jobs$/,
+  /^\/api\/v2\/core\/settings\/kis\/model\/load\/preflight$/,
+  /^\/api\/v2\/core\/settings\/kis\/models\/available$/,
+  /^\/api\/v2\/core\/settings\/kis\/models\/loaded$/,
+  // Opens the Provider confirmation after SSH inspection; applying is separate.
+  /^\/api\/v2\/core\/settings\/kis\/ssh\/provider\/preflight$/,
   /^\/api\/v2\/core\/settings\/by$/,
   /^\/api\/v2\/core\/settings\/search$/,
   /^\/api\/v2\/core\/settings\/terminal\/search$/,
@@ -27,6 +36,7 @@ const REVIEWED_READ_ONLY_POST_PATHS: readonly RegExp[] = [
   /^\/api\/v2\/hosts\/monitor\/search$/,
   /^\/api\/v2\/hosts\/ssh\/search$/,
   /^\/api\/v2\/hosts\/tree$/,
+  /^\/api\/v2\/process\/listening$/,
   /^\/api\/v2\/settings\/search$/,
   /^\/api\/v2\/settings\/ssh\/check$/,
   /^\/api\/v2\/toolbox\/device\/base$/,
@@ -76,6 +86,8 @@ export const test = base.extend({
     await use(context);
 
     if (blockedRequests.length > 0) {
+      // A safety violation must fail even when the test observed a known defect.
+      testInfo.expectedStatus = 'passed';
       await testInfo.attach('blocked-write-requests.json', {
         body: Buffer.from(JSON.stringify(blockedRequests, null, 2)),
         contentType: 'application/json',

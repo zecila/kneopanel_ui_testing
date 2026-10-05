@@ -1,0 +1,103 @@
+import { test, expect } from '../../fixtures/read-only-test';
+
+test.describe('Overview', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+  });
+
+  test('displays the main dashboard sections', async ({ page }) => {
+    const dashboard = page.locator('#dashboard');
+
+    await expect(page).toHaveTitle('KneoPanel');
+    await expect(dashboard.getByText('Status', { exact: true })).toBeVisible();
+    await expect(
+      dashboard.getByText('Monitoring', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dashboard.getByText('System information', { exact: true }).first(),
+    ).toBeVisible();
+  });
+
+  test('displays the main system load status', async ({ page }) => {
+    const dashboard = page.locator('#dashboard');
+
+    await expect(
+      dashboard.getByText(/^(Low|Normal|High) load/).first(),
+    ).toBeVisible();
+    const statusSummaries = dashboard.locator('.input-help');
+    await expect(statusSummaries.filter({ hasText: /cores$/ })).toBeVisible();
+    await expect(
+      statusSummaries.filter({
+        hasText: /GB\s*\/\s*\d+(?:\.\d+)?\s*GB/,
+      }),
+    ).toBeVisible();
+
+    const statusGauges = dashboard.locator('.v-charts.el-tooltip__trigger');
+    expect(await statusGauges.count()).toBeGreaterThanOrEqual(4);
+    await expect(statusGauges.first()).toBeVisible();
+  });
+
+  test('displays the KIS summary categories', async ({ page }) => {
+    await expect(page.getByText('KIS Gateway', { exact: true })).toBeVisible();
+    await expect(page.getByText('Local Provider', { exact: true })).toBeVisible();
+    await expect(page.getByText('Total Providers', { exact: true })).toBeVisible();
+    await expect(page.getByText('Total Models', { exact: true })).toBeVisible();
+  });
+
+  test('displays the system information fields', async ({ page }) => {
+    for (const label of [
+      'Hostname',
+      'Operating system',
+      'Kernel',
+      'Architecture',
+      'Local IP',
+      'Uptime',
+      'Up since',
+    ]) {
+      await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
+    }
+  });
+
+  test('shows Network monitoring by default', async ({ page }) => {
+    const networkRadioButton = page.getByRole('radio', {
+      name: 'Network',
+      exact: true,
+    });
+
+    await expect(networkRadioButton).toBeChecked();
+    await expect(page.getByText(/^Up:/)).toBeVisible();
+    await expect(page.getByText(/^Down:/)).toBeVisible();
+    await expect(page.getByText(/^Total sent:/)).toBeVisible();
+    await expect(page.getByText(/^Total received:/)).toBeVisible();
+  });
+
+  test('switches between Disk I/O and Network monitoring', async ({ page }) => {
+    const diskIORadioButton = page.getByRole('radio', {
+      name: 'Disk I/O',
+      exact: true,
+    });
+    const networkRadioButton = page.getByRole('radio', {
+      name: 'Network',
+      exact: true,
+    });
+
+    await page.getByText('Disk I/O', { exact: true }).click();
+    await expect(diskIORadioButton).toBeChecked();
+    await expect(page.getByText(/^Read:/)).toBeVisible();
+    await expect(page.getByText(/^Write:/)).toBeVisible();
+    await expect(page.getByText(/^I\/O operations:/)).toBeVisible();
+    await expect(page.getByText(/^I\/O latency:/)).toBeVisible();
+
+    await page.getByText('Network', { exact: true }).click();
+    await expect(networkRadioButton).toBeChecked();
+    await expect(page.getByText(/^Up:/)).toBeVisible();
+  });
+
+  test('remains authenticated after refreshing', async ({ page }) => {
+    await page.reload();
+
+    await expect(page.getByText('Status', { exact: true })).toBeVisible();
+    await expect(page.getByPlaceholder('Password')).toHaveCount(0);
+  });
+});
+

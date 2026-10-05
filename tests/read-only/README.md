@@ -1,7 +1,8 @@
 # Read-only tests
 
-Place numbered regression tests in the directory matching their bug-report
-category. Keep general page-loading and navigation checks in `smoke`.
+Group every test by the KneoPanel product area it exercises. Numbered
+regressions live beside general coverage for the same area; their annotations
+link them to the dated report under `docs/bugs/YYYY-MM-DD/`.
 
 All tests in this scope must import the guarded fixture from
 `tests/fixtures/read-only-test.ts`. If a finding requires creating, editing,

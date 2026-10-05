@@ -10,6 +10,12 @@ playwright/.auth/
 .env.*
 !.env.example
 
+# Local reviewer evidence may contain private environment details.
+docs/bugs/**/evidence/
+
+# Local model fixture used only for empty-target workflow tests.
+/qwen2_5_0_5b_instruct.tgz
+
 # Editors and operating systems
 .DS_Store
 .idea/

@@ -5,6 +5,8 @@ import { defineConfig, devices } from '@playwright/test';
 import { AUTH_STATE_PATH, BASE_URL } from './tests/helpers/environment';
 
 const mutationTestsEnabled = process.env.ALLOW_MUTATIONS === 'true';
+const aiMutationTestsEnabled =
+  mutationTestsEnabled && process.env.ALLOW_AI_MUTATIONS === 'true';
 
 export default defineConfig({
   testDir: './tests',
@@ -14,7 +16,20 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [
     ['list'],
-    ['html', { open: 'never' }],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+    [
+      'junit',
+      {
+        includeProjectInTestName: true,
+        outputFile: 'test-results/results.xml',
+      },
+    ],
+    [
+      './tests/reporters/shareable-markdown-reporter.ts',
+      {
+        outputFile: 'playwright-report/summary.md',
+      },
+    ],
   ],
   use: {
     baseURL: BASE_URL,
@@ -71,6 +86,22 @@ export default defineConfig({
           {
             name: 'mutating',
             testMatch: 'mutating/**/*.spec.ts',
+            testIgnore: 'mutating/ai/**/*.spec.ts',
+            dependencies: ['setup'],
+            fullyParallel: false,
+            retries: 0,
+            use: {
+              ...devices['Desktop Chrome'],
+              storageState: AUTH_STATE_PATH,
+            },
+          },
+        ]
+      : []),
+    ...(aiMutationTestsEnabled
+      ? [
+          {
+            name: 'ai-mutating',
+            testMatch: 'mutating/ai/**/*.spec.ts',
             dependencies: ['setup'],
             fullyParallel: false,
             retries: 0,
