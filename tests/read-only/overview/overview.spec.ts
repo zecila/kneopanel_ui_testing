@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/read-only-test';
 
-test.describe('Overview', () => {
+test.describe('Overview', { tag: '@smoke' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });

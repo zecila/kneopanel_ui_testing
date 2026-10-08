@@ -19,9 +19,15 @@ const AI_DESTINATIONS = [
   { name: 'MCP', path: /\/ai\/mcp(?:[/?#]|$)/ },
 ] as const;
 
-test.describe('Main module navigation', () => {
+test.describe('Main module navigation', { tag: '@smoke' }, () => {
   for (const destination of DIRECT_DESTINATIONS) {
     test(`opens ${destination.name}`, async ({ page }) => {
+      if (destination.name === 'Terminals') {
+        await page.routeWebSocket(
+          (url) => url.pathname === '/api/v2/hosts/terminal',
+          (socket) => socket.onMessage(() => {}),
+        );
+      }
       await page.goto('/');
       const menuItem = page.getByRole('menuitem', {
         name: destination.name,

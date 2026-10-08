@@ -33,11 +33,11 @@ Requirements:
 - the environment base URL and security-entrance path
 - an approved test administrator account
 
-Install dependencies and the default browser:
+Install the locked dependencies and all browsers used by the CI lanes:
 
 ```bash
-npm install
-npx playwright install chromium
+npm ci
+npx playwright install chromium firefox webkit
 ```
 
 Create the ignored local configuration file:
@@ -57,10 +57,27 @@ ALLOW_MUTATIONS=false
 KNEO_APPROVED_MUTATION_TARGET=
 ```
 
+Verify the complete local setup before running the suite:
+
+```bash
+npm run ci:doctor
+```
+
+The readiness check validates required settings without printing their values,
+checks the installed browsers and pinned Playwright versions, contacts the
+configured security entrance, and performs the real authentication setup. It
+never enables or executes mutation tests.
+
 Do not commit `.env` or `playwright/.auth/admin.json`. They are ignored because
 they contain environment details or authentication state.
 
 ## What is tested
+
+The capability-level source of truth is
+[`docs/coverage/workflow-coverage-matrix.md`](docs/coverage/workflow-coverage-matrix.md).
+It distinguishes route smoke checks from workflow coverage, defines the
+required depth for each user skill, and assigns mutating or disruptive work to
+an appropriate CI lane.
 
 The test files are grouped first by safety scope and then by KneoPanel product area:
 
@@ -80,11 +97,12 @@ tests/
 |   `-- terminal/
 `-- mutating/
     |-- ai/             separately approved KIS model operations
-    |-- cleanup/
     |-- configuration/
     |-- cron-jobs/
     |-- scripts/
-    `-- validation/
+    |-- system/
+    |-- validation/
+    `-- zz-cleanup/     terminal exact-resource residue audit
 ```
 
 The current read-only suite covers the public security entrance, authenticated
@@ -92,12 +110,65 @@ overview, system/process views, AI/KIS pages, cron controls, settings, nested
 module navigation, filtering, sorting, validation, and selected documented UI
 bugs. AI coverage includes One-Click service configuration and pipeline health,
 model-instance API/UI consistency and refresh behavior, non-submitting model-load
-requirements, GPU numbering, and per-GPU VRAM usage validation. It does not load
-or unload a model.
+requirements, safe intercepted stop/delete/server-import workflows, KIS service,
+Gateway, Provider, traffic-control and settings contracts, embedded monitoring,
+and Kneo Apps lifecycle behavior. Authentication coverage now includes invalid
+credential feedback, password validation/failure, and Security dialog validation
+and cancellation. No intercepted lifecycle request reaches the panel, so the safe
+suite still does not load, stop, delete, or import a real model or alter host-wide
+security/services. Current GPU monitoring also maps complete device telemetry
+and process cardinality, with synthetic multi/empty/error states and proven
+auto-refresh updates and stopping. Container coverage reads and maps the live
+inventory and statistics without emitting row values, then uses a reserved
+synthetic container for populated, filtered, unavailable, inspect, CPU/memory,
+safe EventSource log, and failure/recovery states. It never opens a live row or
+starts, stops, or otherwise controls a live container. Historical GPU coverage
+maps all six chart series, exact device
+selection, metric availability, refresh/reload, empty time ranges and
+inventories, and failure recovery. System Monitoring maps live load, CPU,
+memory, disk, and network series, verifies aggregate and per-chart requests,
+proves all five canvases redraw, and covers empty/error recovery. Overview
+monitoring validates the live disk/network counter contract and uses synthetic
+counter samples to prove zero initialization, nonzero later rates, exact totals,
+automatic polling, switching, and failure recovery. Operation-log coverage validates the live paged response without
+emitting its contents and uses synthetic records for filter, empty, failure,
+retry, and cleanup-cancellation behavior. Login, task, and system-log tests use
+the same content-safe pattern, and all live system-log content reads are
+replaced with empty responses. SSH-log coverage validates the live paged schema
+and cardinality without emitting records, with synthetic filter, refresh, and
+failure recovery. Website-log coverage maps the live site inventory while
+intercepting every live content read, then uses synthetic sites and content to
+verify access/error selection, switching, failure recovery, and cleanup cancel.
+Process coverage validates the live WebSocket
+schema and row identities without emitting process details, then uses a mocked
+socket and exact dummy detail GET for filters, empty results, details,
+closed-socket recovery, and cancellation without ending anything. Disk
+coverage maps live and synthetic partitions, reload, empty/error states, and
+never invokes a disk action. Installed Applications coverage validates the
+live inventory contract and uses only synthetic applications for status,
+filters, action eligibility, refresh/reload, and failure recovery; it never
+starts, stops, restarts, rebuilds, backs up, configures, or uninstalls an app.
+Local terminal coverage installs a browser-side
+WebSocket mock before navigation, validates connection and resize frames, and
+uses only synthetic commands and output for execution, Quick Command,
+disconnect/reconnect, unavailable-access, and cleanup states; no terminal
+command reaches the panel host.
+Toolbox coverage validates the live quick-settings schema and scalar UI mapping
+without emitting configuration values, then uses synthetic DNS, Hosts, Swap,
+hostname, account, NTP, timezone, and time data for dialog mapping,
+validation, cancellation, and failure recovery. Panel/server restart dialogs
+are canceled before confirmation; utilities, time sync, and host settings are
+never applied in the read-only lane. About coverage maps the live panel and KIS
+version sources without emitting their values and covers placeholders,
+permission-denied sign-out, unavailable feedback, reload recovery, and the compiled build ID;
+the current build exposes no update or upgrade action on that page.
 The current mutation suite covers cron-group and cron-job lifecycles, Script
 Library lifecycles, assignment, search and selection, cancel/delete button
-behavior, validation without submission, deletion protection, One-Click address
-validation and persistence, reversible Panel alias updates, and cleanup.
+behavior, cron enable/disable persistence, safe manual execution with successful
+and failed records, validation without submission, deletion protection,
+File Browser folder and file lifecycles with byte-for-byte download and exact
+cleanup, One-Click address validation and persistence, reversible Panel alias
+updates, and cleanup.
 The separately gated AI mutation suite covers model load/unload, automatic GPU
 assignment, VRAM allocation and release, insufficient-capacity blocking,
 duplicate-load prevention, unload cancellation, exact instance cleanup, and
@@ -116,6 +187,12 @@ setup, navigation, or cleanup failures to appear successful. Once the expected
 behavior is present, the same assertion runs as an ordinary passing regression.
 The read-only guard and mutation cleanup fixtures override that expected status
 when they fail, so a safety or cleanup problem always fails the run.
+Configured core workflows also fail normally when their service or usable
+resource is unavailable. In particular, One-Click connectivity, its six-stage
+health pipeline, KIS service-log targets, and the gated model-load target are
+never converted to environment skips.
+Skips are reserved for optional or case-specific fixtures that do not block the
+feature's primary path.
 
 ## Running tests locally
 
@@ -129,6 +206,10 @@ Useful commands:
 
 ```bash
 npm run typecheck                 # TypeScript validation only
+npm run ci:doctor                 # Environment, browser, target, and auth readiness
+npm run test:ci:smoke             # Critical Chromium CI gate
+npm run test:ci:regression        # Remaining Chromium read-only regression
+npm run test:ci:cross-browser     # Full Firefox and WebKit compatibility
 npm run test:headed               # Read-only tests with a visible browser
 npm run test:ui                   # Refresh auth, then open read-only tests in UI mode
 npm run test:firefox              # Read-only suite in Firefox
@@ -272,8 +353,14 @@ The local placeholder archive is used automatically only on an empty target.
 `.gitlab-ci.yml` is prepared for GitLab. The automatic pipeline runs:
 
 1. TypeScript type checking.
-2. The public and authenticated read-only suite.
-3. A manual mutation job on the default branch, only when explicitly started.
+2. Tagged Chromium smoke checks on branches and merge requests.
+3. The remaining Chromium read-only regression on the default branch and on
+   schedules.
+4. The complete Firefox and WebKit read-only suite on schedules.
+
+Merge requests can start the remaining Chromium regression manually. General
+mutation tests are a separate manual job on non-scheduled default-branch
+pipelines. AI mutation tests are not enabled in the GitLab pipeline draft.
 
 The GitLab runner needs network access to KneoPanel and a Playwright-compatible
 Docker executor. Configure the URL, security entrance, and credentials as

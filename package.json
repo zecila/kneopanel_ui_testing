@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "description": "Read-only-first Playwright tests for the KneoPanel test environment",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
+    "ci:doctor": "node scripts/ci-doctor.mjs",
     "test": "playwright test --project=public-read-only --project=read-only",
+    "test:ci:smoke": "playwright test --project=public-read-only --project=read-only --grep @smoke --workers=1",
+    "test:ci:regression": "playwright test --project=public-read-only --project=read-only --grep-invert @smoke --workers=1",
+    "test:ci:cross-browser": "playwright test --project=read-only-firefox --project=read-only-webkit --workers=1",
     "test:auth": "playwright test --project=setup",
     "test:headed": "playwright test --project=read-only --headed",
     "test:ui": "playwright test --project=setup && playwright test --project=public-read-only --project=read-only --no-deps --ui",

@@ -57,6 +57,25 @@ test.info().annotations.push({
 
 Do not number general smoke coverage as though it reproduced a documented bug.
 
+## CI lanes
+
+Tag only fast, read-only checks of critical deployment behavior with `@smoke`.
+The smoke set covers entrance availability, authenticated overview and refresh,
+primary navigation, KIS node health, container inventory, and deployed version
+identity. Keep detailed validation, simulated failures, edge states, and
+historical regressions out of this tag.
+
+The ordinary CI commands are intentionally disjoint:
+
+```text
+npm run test:ci:smoke          # tagged Chromium checks
+npm run test:ci:regression     # remaining Chromium read-only checks
+npm run test:ci:cross-browser  # complete Firefox and WebKit read-only checks
+```
+
+Every new critical workflow should contribute at most one representative smoke
+check. Its deeper cases belong to the regression lane.
+
 ## Safety scopes
 
 The default `npm test` command runs only public and read-only projects. Requests

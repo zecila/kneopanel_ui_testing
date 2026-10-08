@@ -7,6 +7,10 @@ test('shows the complete invalid quick-command group message', async ({ page }) 
       'docs/bugs/2026-09-15/verified-ui-bugs-9-15-2026.md#15-quick-commands-group-validation-text-is-clipped',
   });
 
+  await page.routeWebSocket(
+    (url) => url.pathname === '/api/v2/hosts/terminal',
+    (socket) => socket.onMessage(() => {}),
+  );
   await page.goto('/terminal');
   await page.getByText('Quick commands', { exact: true }).click();
   await page.getByRole('button', { name: 'Group', exact: true }).click();

@@ -11,8 +11,29 @@ async function openKisModelSettings(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/ai\/kis-models\/settings(?:[/?#]|$)/);
 }
 
+async function expectOneClickReachable(
+  page: Page,
+  configuredAddress: string,
+): Promise<void> {
+  await expect(
+    page.getByText(
+      'Cannot connect to the One-Click API. One-Click is unavailable, but regular KIS models can still be loaded and used. Check the One-Click service and its connection settings.',
+      { exact: true },
+    ),
+    'One-Click is a core workflow, so an unavailable service must fail the report.',
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(`Cannot reach One-Click at ${configuredAddress}`, { exact: true }),
+    `One-Click must answer at its configured address: ${configuredAddress}`,
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(/^One-Click answered at https?:\/\//),
+    `One-Click must answer at its configured address: ${configuredAddress}`,
+  ).toBeVisible();
+}
+
 test.describe('KIS Models', () => {
-  test('shows a valid One-Click service configuration without changing it', async ({
+  test('shows a valid, reachable One-Click service configuration without changing it', async ({
     page,
   }) => {
     await openKisModelSettings(page);
@@ -31,12 +52,22 @@ test.describe('KIS Models', () => {
     const configuredAddress = await address.inputValue();
     expect(() => new URL(configuredAddress)).not.toThrow();
     expect(new URL(configuredAddress).protocol).toMatch(/^https?:$/);
+    await expectOneClickReachable(page, configuredAddress);
   });
 
-  test('reports every One-Click pipeline stage as healthy', async ({ page }) => {
+  test('reports every One-Click pipeline stage as healthy', async ({
+    page,
+  }) => {
     await openKisModelSettings(page);
 
-    await expect(page.getByText(/^One-Click answered at https?:\/\//)).toBeVisible();
+    const service = page.locator('.el-form-item').filter({
+      has: page.getByText('One-Click address', { exact: true }),
+    });
+    const address = service.locator('input[type="text"]');
+    await expect(address).not.toHaveValue('');
+    const configuredAddress = await address.inputValue();
+    await expectOneClickReachable(page, configuredAddress);
+
     for (const stage of [
       'Product shell',
       'Discovery',
@@ -45,7 +76,11 @@ test.describe('KIS Models', () => {
       'Report',
       'Gate',
     ]) {
-      await expect(page.getByText(stage, { exact: true })).toBeVisible();
+      const row = page.getByRole('row').filter({
+        has: page.getByText(stage, { exact: true }),
+      });
+      await expect(row).toHaveCount(1);
+      await expect(row).toContainText('OK');
     }
     await expect(page.getByText('OK', { exact: true })).toHaveCount(6);
   });

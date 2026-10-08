@@ -99,7 +99,14 @@ test('validates and persists the discovered One-Click address', async ({ page })
 
   const persistedAddress = await openOneClickSettings(page);
   await expect(persistedAddress).toHaveValue(originalAddress);
-  await expect(page.getByText(/^One-Click answered at https?:\/\//)).toBeVisible();
+  await expect(
+    page.getByText(`Cannot reach One-Click at ${originalAddress}`, { exact: true }),
+    `One-Click is a core workflow and must answer at ${originalAddress}`,
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(/^One-Click answered at https?:\/\//),
+    `One-Click is a core workflow and must answer at ${originalAddress}`,
+  ).toBeVisible();
 });
 
 test('updates the Panel alias and restores its original value', async ({

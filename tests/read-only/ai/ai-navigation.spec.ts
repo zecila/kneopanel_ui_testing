@@ -17,7 +17,7 @@ const AI_DESTINATIONS = [
   },
 ] as const;
 
-test.describe('AI navigation', () => {
+test.describe('AI navigation', { tag: '@smoke' }, () => {
   for (const destination of AI_DESTINATIONS) {
     test(`opens ${destination.name} from the sidebar`, async ({ page }) => {
       await page.goto('/');

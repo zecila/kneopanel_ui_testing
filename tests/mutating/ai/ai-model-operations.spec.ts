@@ -58,25 +58,14 @@ async function prepareAndLoad(
   return { attempt, preflight };
 }
 
-async function discoverLoadTargetOrSkip(
+async function discoverLoadTarget(
   registry: AiMutationRegistry,
   config: AiMutationConfig,
 ): Promise<AiModelTarget> {
-  try {
-    return await registry.discoverLoadTarget(
-      config.provider,
-      config.failure ? [config.failure] : [],
-    );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (
-      message.startsWith('No Ready, inactive model fits') ||
-      message.startsWith('KIS did not report a running Provider')
-    ) {
-      test.skip(true, `Environment prerequisite unavailable: ${message}`);
-    }
-    throw error;
-  }
+  return registry.discoverLoadTarget(
+    config.provider,
+    config.failure ? [config.failure] : [],
+  );
 }
 
 test.describe('AI > KIS Models > Model instances > Lifecycle and resources', () => {
@@ -89,7 +78,7 @@ test.describe('AI > KIS Models > Model instances > Lifecycle and resources', () 
     aiRegistry,
     page,
   }) => {
-    const target = await discoverLoadTargetOrSkip(aiRegistry, aiConfig);
+    const target = await discoverLoadTarget(aiRegistry, aiConfig);
     const { attempt } = await prepareAndLoad(
       page,
       target,
@@ -122,7 +111,7 @@ test.describe('AI > KIS Models > Model instances > Lifecycle and resources', () 
     page,
   }) => {
     const baseline = await readGpuMemory(page);
-    const target = await discoverLoadTargetOrSkip(aiRegistry, aiConfig);
+    const target = await discoverLoadTarget(aiRegistry, aiConfig);
     const { attempt, preflight } = await prepareAndLoad(
       page,
       target,
@@ -154,7 +143,7 @@ test.describe('AI > KIS Models > Model instances > Lifecycle and resources', () 
     page,
   }) => {
     const baseline = await readGpuMemory(page);
-    const target = await discoverLoadTargetOrSkip(aiRegistry, aiConfig);
+    const target = await discoverLoadTarget(aiRegistry, aiConfig);
     const { attempt, preflight } = await prepareAndLoad(
       page,
       target,
@@ -186,7 +175,7 @@ test.describe('AI > KIS Models > Model instances > Lifecycle and resources', () 
     aiRegistry,
     page,
   }) => {
-    const target = await discoverLoadTargetOrSkip(aiRegistry, aiConfig);
+    const target = await discoverLoadTarget(aiRegistry, aiConfig);
     const actualPreflight = await aiRegistry.preflight(target);
     const requiredGpuCount = actualPreflight.totalGpuCount + 1;
     await aiRegistry.prepare(target);
@@ -255,7 +244,7 @@ test.describe('AI > KIS Models > Model instances > Lifecycle and resources', () 
     aiRegistry,
     page,
   }) => {
-    const target = await discoverLoadTargetOrSkip(aiRegistry, aiConfig);
+    const target = await discoverLoadTarget(aiRegistry, aiConfig);
     const { attempt } = await prepareAndLoad(
       page,
       target,

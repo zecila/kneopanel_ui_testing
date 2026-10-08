@@ -15,5 +15,9 @@ Avoid tests that only prove a button is visible when a safe outcome can also be
 verified.
 
 Use `test.fail()` for a reproduced, documented defect whose fix should produce
-an unexpected pass. Use a runtime `test.skip()` only when the environment lacks
-an explicit prerequisite, such as a configured container runtime.
+an unexpected pass. A core workflow that is configured but unavailable must run
+and fail; service outages, missing core surfaces, and the absence of a usable
+KIS model or Provider are reportable failures, not environment skips. Use a
+runtime `test.skip()` only for an optional or case-specific prerequisite whose
+absence does not prevent the main feature from working, such as a failed
+instance needed for a recovery-only scenario.

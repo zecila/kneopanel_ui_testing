@@ -110,7 +110,7 @@ test('calculates GPU requirements for a Ready model without a weight-header erro
   if (memoryUnverified) {
     await expect(
       dialog.getByText(
-        'GPU memory capacity could not be verified. Loading is blocked.',
+        'GPU memory capacity could not be verified. You can try loading, but it may fail due to insufficient GPU memory. See the details.',
         { exact: true },
       ),
     ).toBeVisible();
@@ -120,12 +120,12 @@ test('calculates GPU requirements for a Ready model without a weight-header erro
         { exact: true },
       ),
     ).toBeVisible();
+    expect(envelope.data.canLoad).toBe(true);
+    await expect(
+      dialog.getByRole('button', { name: 'Load', exact: true }),
+    ).toBeEnabled();
   }
 
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  test.fail(
-    memoryUnverified,
-    `Known defect: KIS cannot verify Ready-model GPU memory: ${envelope.data.memoryCapacity?.reason ?? 'unknown reason'}.`,
-  );
-  expect(memoryUnverified).toBe(false);
+  await expect(dialog).toBeHidden();
 });

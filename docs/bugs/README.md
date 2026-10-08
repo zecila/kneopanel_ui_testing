@@ -10,6 +10,9 @@ curated evidence from that session together.
 | [2026-09-15](2026-09-15/) | Verified UI bugs |
 | [2026-09-16](2026-09-16/) | Verified UI bugs |
 | [2026-10-01](2026-10-01/) | Reviewer report, complete case list, verified UI bugs, and curated evidence |
+| [2026-10-05](2026-10-05/) | Verified model Stop transition race and duplicate unload failure |
+| [2026-10-06](2026-10-06/) | Verified File Browser UI bugs |
+| [2026-10-07](2026-10-07/) | Verified Script Library dependency, blank Terminal input, About version-fetch coupling, and intermittent Change Password field defects, plus Applications route/navigation intent finding |
 
 For the October review, start with
 [REVIEWER-TEST-REPORT.md](2026-10-01/REVIEWER-TEST-REPORT.md), then use

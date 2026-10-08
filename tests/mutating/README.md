@@ -36,12 +36,40 @@ The mutation suite covers:
 
 - cron-group create, rename, and delete;
 - Script Library create, edit, group assignment, and delete with `/bin/true`;
-- shell cron-job create, edit, group assignment, and delete without executing it.
+- Script Library selection in a cron job, create failure/retry, exact API
+  binding, reload persistence, safe execution, live edit propagation,
+  dependency deletion regression, and exact cleanup;
+- shell cron-job create, edit, group assignment, and delete;
+- exact-job enable/disable with cancellation and reload persistence;
+- bulk cron status updates with deterministic partial failure, persisted mixed
+  state, targeted retry, full recovery, and per-job API assertions;
+- safe manual execution, trigger failure/retry, concurrent-run rejection,
+  successful and failed records, and edit/retry recovery;
+- cron output download, clear cancellation/confirmation, empty/single/multi
+  history, and cleared-state persistence;
+- exact-path File Browser folder creation, empty-state persistence, and cleanup;
+- file upload cancellation and validation, byte-for-byte download, rename
+  failure/retry and persistence, delete cancellation, and permanent deletion;
+- multi-file upload failure, confirmed cancellation, reload/reselect retry,
+  per-file success responses, persistence, and byte-for-byte downloads;
+- partial-batch upload persistence and targeted retry of only the missing file;
+- upload progress lockout, confirmed in-progress cancellation with no artifact,
+  and a 1 MiB binary retry with byte-for-byte download verification;
+- exact file creation, folder rename/delete, copy failure/retry, copy/move
+  payloads, collision cancel/overwrite/rename with content verification,
+  cardinality, and paginated persistence;
+- exact ZIP creation and default-destination decompression, including removal
+  and restoration of the archived source file;
 - cron-job and Script Library edit-cancel and delete-cancel behavior;
 - cron-job search combinations, row selection, and bulk-action enablement;
 - Script Library search combinations, row selection, and bulk-action enablement;
 - client-side required-field validation without create requests;
-- protection against deleting an in-use Script Library group.
+- stale-Favorite behavior after exact permanent file deletion, with exact
+  favorite cleanup;
+- same-directory copy collision behavior for unchanged Rename and Overwrite,
+  including exact request payloads, source preservation, and failed operation
+  logs;
+- protection against deleting an in-use Script Library group;
 - One-Click address validation, save, and reload using the discovered address;
 - Panel alias update, reload, and verified restoration.
 

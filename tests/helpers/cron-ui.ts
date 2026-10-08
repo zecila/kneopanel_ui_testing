@@ -55,11 +55,12 @@ export async function createShellCronJobThroughUi(
   registry: MutationRegistry,
   name: string,
   groupName?: string,
+  script = '/bin/true',
 ): Promise<MutationResource> {
   await page.goto('/cronjobs/cronjob');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByLabel('Name', { exact: true }).fill(name);
-  await page.locator('[contenteditable="true"]').fill('/bin/true');
+  await page.locator('[contenteditable="true"]').fill(script);
 
   if (groupName) {
     await page.getByLabel('Group', { exact: true }).click();
